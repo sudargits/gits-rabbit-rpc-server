@@ -1,0 +1,22 @@
+{
+  "name": "gits-rabbit-rpc-server",
+  "url" : "https://github.com/kumangxxx/gits-rabbit-rpc-server.git",
+  "version": "1.0.0",
+  "description": "Helper for using RabbitMQ as RPC Server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rabbitmq",
+    "server",
+    "rpc"
+  ],
+  "author": "kumangxxx",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.5.1",
+    "async": "^2.5.0",
+    "underscore": "^1.8.3"
+  }
+}
