@@ -9,6 +9,8 @@ const _ = require('underscore');
 var _handlers = {};
 var _global_connection;
 var _global_channel;
+var _global_queue_name;
+var _exchange_name;
 
 var ack = (msg) => {
     try {
@@ -35,7 +37,8 @@ var sendresponse = (msg, response, callback) => {
 
 var subscribe = (queue_name) => {
     if (!_global_channel) { console.log('Channel for RabbitRPC Server is not ready'); return; }
-
+    
+    _global_queue_name = queue_name;    
     console.log('RabbitRPC Server is listening..');
     _global_channel.consume(queue_name, (msg) => {
 
@@ -43,7 +46,7 @@ var subscribe = (queue_name) => {
         let string_body = msg.content.toString();
 
         var handler = _handlers[route];
-        if (!handler) { ack(msg); return; }
+        if (!handler) { console.log(`undhandled message at route ${route} with body:\n${string_body}`); ack(msg); return; }
 
         handler(string_body, (err, result) => {
             if (!err && !_.isString(result)) { 
@@ -61,6 +64,18 @@ var subscribe = (queue_name) => {
 
 exports.handleRoute = (route, handler) => {
     _handlers[route] = handler;
+};
+
+exports.declareExchange = ({name = '', type = 'topic', durable = 'true'}) => {
+    _exchange_name = name;
+    _global_channel.assertExchange(name, type, { durable: durable });
+};
+
+exports.bindExchangeToQueue = ({queue_name = _global_queue_name, routingKey = undefined}) => {
+    if (!_exchange_name) { console.log(`Please declare exchange first`); return; }
+    if (!routingKey) { console.log(`Routing key cannto be empty`); return; }
+    console.log(`Binding queue ${queue_name} to exchange ${_exchange_name} with patter ${routingKey}`);
+    _global_channel.bindQueue(queue_name, _exchange_name, routingKey);
 };
 
 exports.start = (url_string, queue_name, max_connection, callback) => {

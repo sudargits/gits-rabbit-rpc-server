@@ -20,6 +20,8 @@ server.handleRoute('user.api.all', function(stringBody, callback) {
 });
 ...
 server.start('amqps://user:password@host', 'queue_name', max_connection, function(err) {
+    rabbit_server.declareExchange({name: 'rpc_service', type: 'topic', durable: true});
+    rabbit_server.bindExchangeToQueue({routingKey: 'rpc.api.test'});
     console.log('RabbitMQ RPC Server is running');
 });
 
