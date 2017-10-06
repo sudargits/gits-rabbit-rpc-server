@@ -20,6 +20,16 @@ var ack = (msg) => {
     }
 };
 
+/**
+ * Purge queue with callback
+ * @param queue_name => queue name
+ * @param callback => function(err,ok) {...}
+ */
+var purge = (queue_name,callback) => {
+    if (!_global_channel) { console.log('Channel for RabbitRPC Server is not ready'); return; }
+    _global_channel.purgeQueue(queue_name,callback);
+}
+
 var sendresponse = (msg, response, callback) => {
 
     if (!_global_channel) { 
@@ -60,6 +70,17 @@ var subscribe = (queue_name) => {
             });
         });
     });
+};
+
+
+/**
+ * Purge with callback
+ * @param queue_name
+ * @param callback => function(err,ok) {...}
+ */
+exports.purge = (queue_name,callback) => {
+    if (!queue_name) { console.log(`Please input queue_name for purge`); return;}
+    _global_channel.purgeQueue(queue_name,callback);
 };
 
 exports.handleRoute = (route, handler) => {
@@ -105,6 +126,38 @@ exports.start = (url_string, queue_name, max_connection, callback) => {
     async.waterfall([connect, open_channel, declare_queue], (err, result) => {
         if (err) console.log(err);
         subscribe(queue_name);
+        callback(err);
+    });
+}
+
+exports.startWithPurge = (url_string, queue_name, max_connection, callback) => {
+    const uri = url.parse(url_string);
+
+    var connect = (cb) => {
+        amqp.connect(url_string, { servername: uri.hostname }, (err, conn) => {
+            cb(err, conn);
+        });
+    };
+
+    var open_channel = (conn, cb) => {
+        _global_connection = conn;
+        conn.createChannel((err, ch) => {
+            cb(err, ch);
+        });
+    };
+
+    var declare_queue = (ch, cb) => {
+        _global_channel = ch;
+        ch.prefetch(max_connection || 5);
+        ch.assertQueue(queue_name, { durable: true });
+        cb(null, ch);
+    };
+
+    async.waterfall([connect, open_channel, declare_queue], (err, result) => {
+        if (err) console.log(err);
+        _global_channel.purgeQueue(queue_name,(err,ok) => {
+            subscribe(queue_name);
+        });
         callback(err);
     });
 }
