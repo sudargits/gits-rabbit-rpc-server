@@ -29,17 +29,21 @@ server.start('amqps://user:password@host', 'queue_name', max_connection, functio
 
 
 # start server with purge queue
+```
 server.startWithPurge('amqps://user:password@host', 'queue_name', max_connection, function(err) {
     rabbit_server.declareExchange({name: 'rpc_service', type: 'topic', durable: true});
     rabbit_server.bindExchangeToQueue({routingKey: 'rpc.api.test'});
     console.log('RabbitMQ RPC Server is running');
 });
+```
 
 # purge
+```
 rabbit_server.purge("rpc_service",(err,ok) => {
     if (!err) {
-
+```
     }else{
-
+```
     }
 });
+```
